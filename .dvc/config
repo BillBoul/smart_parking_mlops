@@ -1,0 +1,6 @@
+[core]
+    remote = onedrive_remote
+['remote "gdrive_remote"']
+    url = gdrive://1tgLErtddGUvuiNpOFI0Md5zaFV0BGJwU?usp=sharing
+['remote "onedrive_remote"']
+    url = D:\OneDrive - University of Saint Joseph\USJ\Semestre 8\Projet Multidisciplinaire\Project\AI\ChatGPT\smart_parking_dvc
