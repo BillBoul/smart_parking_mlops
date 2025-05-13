@@ -1,0 +1,59 @@
+schema: '2.0'
+stages:
+  generate_dataset:
+    cmd: python data_generation/update_dataset.py
+    deps:
+    - path: config/holidays.json
+      hash: md5
+      md5: cc756261b087914f912448c82aedff51
+      size: 1257
+    - path: config/semester_dates.json
+      hash: md5
+      md5: 857f62ef64797f0dbe8afc694fcc714a
+      size: 646
+    - path: data_generation/generate_parking_data.py
+      hash: md5
+      md5: 6d5c1e1d838b48f769092153fa4e4180
+      size: 3655
+    - path: data_generation/generate_weather_data.py
+      hash: md5
+      md5: 05487ac82070975219040bd679390ef2
+      size: 1583
+    - path: data_generation/update_dataset.py
+      hash: md5
+      md5: 689c8ae31e563177218c701c9a957799
+      size: 2388
+    outs:
+    - path: data/merged_parking_weather_dataset.csv
+      hash: md5
+      md5: a282ce8529446f940f51f4af9fd64eb4
+      size: 1113259
+  train_model:
+    cmd: python train_and_log.py --csv_path data/merged_parking_weather_dataset.csv
+    deps:
+    - path: data/merged_parking_weather_dataset.csv
+      hash: md5
+      md5: a282ce8529446f940f51f4af9fd64eb4
+      size: 1113259
+    - path: data_loader.py
+      hash: md5
+      md5: 57536ec260c9c022f84348a67175f3d7
+      size: 225
+    - path: feature_engineering.py
+      hash: md5
+      md5: 24b8bee34aa909d747703d4549467639
+      size: 1427
+    - path: model_builder.py
+      hash: md5
+      md5: 81f7277ec707d42ae5acd2a13cd10cad
+      size: 751
+    - path: train_and_log.py
+      hash: md5
+      md5: 25ecd956da85b35483f9273da4c8f717
+      size: 4193
+    outs:
+    - path: output/
+      hash: md5
+      md5: 510171de50caa2daf557f70e407e3728.dir
+      size: 137709
+      nfiles: 2
