@@ -1,4 +1,28 @@
-env/ 
-mlruns/ 
-output/ 
+# Byte-compiled / cache
 __pycache__/
+*.py[cod]
+*.so
+
+# Environment
+env/
+.venv/
+venv/
+ENV/
+
+# DVC
+*.dvc
+!.gitignore
+.data/
+data/*.csv
+!data/merged_parking_weather_dataset.csv.dvc
+
+# VSCode/IDE
+.vscode/
+.idea/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+mlruns/
+output/
