@@ -44,20 +44,38 @@ def get_parking_data(start_dt: datetime, end_dt: datetime, capacity: int = 8) ->
             is_weekend = int(day_of_week == 5)
             is_holiday = int(current_date in holidays)
             semester_type = get_semester_type(datetime.combine(current_date, datetime.min.time()))
-            is_closed_day = int(is_holiday or day_of_week == 6 or semester_type == 'Break')
+
+            # 🔁 Rare override for holidays (simulate a few active holidays)
+            if is_holiday and random.random() > 0.9:
+                is_closed_day = 0
+            else:
+                is_closed_day = int(is_holiday or day_of_week == 6 or semester_type == 'Break')
+
             event_nearby = int(current_date in event_days.get(current_date.year, []))
 
+            # 📊 Base logic
             if is_closed_day:
                 available_spots = capacity
             elif is_weekend:
                 available_spots = capacity - np.random.randint(0, capacity // 2)
             else:
+                # Weekday active hours
                 if 7 <= hour <= 9:
-                    available_spots = max(0, capacity - np.random.randint(1, 3))
-                elif 9 < hour <= 16:
-                    available_spots = max(0, min(capacity, capacity + np.random.randint(-1, 2)))
+                    available_spots = capacity - np.random.randint(2, 5)
+                elif 10 <= hour <= 16:
+                    available_spots = capacity + np.random.randint(-2, 2)
                 else:
-                    available_spots = min(capacity, capacity + np.random.randint(1, 3))
+                    # 🟠 Introduce occasional late-hour activity
+                    available_spots = capacity
+                    if random.random() < 0.1:
+                        available_spots -= np.random.randint(1, 4)
+
+            # 🔁 Event impact
+            if event_nearby:
+                available_spots -= np.random.randint(2, 5)
+
+            # Clamp and round safely
+            available_spots = int(round(max(0, min(capacity, available_spots))))
 
             data.append({
                 'date': current_date.strftime("%Y-%m-%d"),

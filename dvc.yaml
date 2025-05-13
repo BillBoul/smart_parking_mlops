@@ -1,0 +1,22 @@
+stages:
+  generate_dataset:
+    cmd: python data_generation/update_dataset.py
+    deps:
+      - data_generation/update_dataset.py
+      - data_generation/generate_parking_data.py
+      - data_generation/generate_weather_data.py
+      - config/semester_dates.json
+      - config/holidays.json
+    outs:
+      - data/merged_parking_weather_dataset.csv
+
+  train_model:
+    cmd: python train_and_log.py --csv_path data/merged_parking_weather_dataset.csv
+    deps:
+      - train_and_log.py
+      - model_builder.py
+      - feature_engineering.py
+      - data_loader.py
+      - data/merged_parking_weather_dataset.csv
+    outs:
+      - output/

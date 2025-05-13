@@ -8,7 +8,6 @@ __pycache__/
 env/
 .vscode/
 .idea/
-output/
 mlruns/
 *.tmp
 *.bak
