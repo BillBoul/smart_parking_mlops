@@ -9,13 +9,16 @@ from feature_engineering import add_time_features, prepare_features_and_labels, 
 from model_builder import build_model
 from sklearn.metrics import mean_absolute_error, r2_score
 from tensorflow.keras.callbacks import EarlyStopping
+import shutil
+import urllib.parse
+import joblib
 
 def main(args):
     # ==== Load and preprocess data ====
     df = load_dataset(args.csv_path)
     df = add_time_features(df)
     X, y = prepare_features_and_labels(df)
-    X_train_scaled, X_test_scaled, y_train, y_test = split_and_scale(X, y)
+    X_train_scaled, X_test_scaled, y_train, y_test, scaler = split_and_scale(X, y, return_scaler=True)
 
     # ==== Build and train model ====
     input_dim = X_train_scaled.shape[1]
@@ -52,6 +55,30 @@ def main(args):
         # ==== Log model ====
         mlflow.keras.log_model(model, artifact_path="final_model")
         print("✅ Model logged to MLflow.")
+
+        # Get actual model path on disk from MLflow URI
+        artifact_uri = mlflow.get_artifact_uri("final_model")  # e.g., file:///C:/Users/...
+        parsed_uri = urllib.parse.urlparse(artifact_uri)
+        local_model_path = parsed_uri.path
+
+        # Windows fix: remove leading slash (e.g., '/C:/...' → 'C:/...')
+        if os.name == "nt" and local_model_path.startswith("/"):
+            local_model_path = local_model_path[1:]
+
+        print(f"[INFO] Resolved model path: {local_model_path}")
+
+        production_model_path = "production_model"
+
+        if os.path.exists(production_model_path):
+            shutil.rmtree(production_model_path)
+
+        shutil.copytree(local_model_path, production_model_path)
+        print(f"[INFO] Best model copied to '{production_model_path}' for API deployment.")
+
+        scaler_path = os.path.join("production_model", "scaler.pkl")
+        joblib.dump(scaler, scaler_path)
+        mlflow.log_artifact(scaler_path)
+        print(f"[INFO] Scaler saved to {scaler_path} and logged to MLflow.")
 
         # ==== Plot and log prediction results ====
         os.makedirs("output", exist_ok=True)
