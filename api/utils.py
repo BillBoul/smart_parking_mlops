@@ -7,25 +7,30 @@ import joblib
 from feature_engineering import add_time_features, prepare_features_and_labels
 
 
-def generate_future_dataframe_for_tomorrow(api_key, location="Mansourieh,LB"):
-    # 1. Define tomorrow's date and hourly slots
-    tomorrow = datetime.today().date() + timedelta(days=1)
-    hours = list(range(7, 23))  # 7 AM to 10 PM
+def generate_future_dataframe_for_next_36_hours(api_key, location="Mansourieh,LB"):
+    now = datetime.now()
+    current_hour = now.hour
+    today = now.date()
+    tomorrow = today + timedelta(days=1)
+
+    # Include hours from next full hour today (if within range) + tomorrow
+    hours_today = [h for h in range(current_hour + 1, 23) if 7 <= h <= 22]
+    hours_tomorrow = [h for h in range(7, 23)]
 
     rows = []
-    for hour in hours:
-        rows.append({
-            "date": tomorrow,
-            "hour": hour
-        })
+
+    for hour in hours_today:
+        rows.append({"date": today, "hour": hour})
+    for hour in hours_tomorrow:
+        rows.append({"date": tomorrow, "hour": hour})
 
     df = pd.DataFrame(rows)
 
-    # 2. Day-based features
-    df["day_of_week"] = df["date"].apply(lambda d: d.weekday())  # Monday=0
+    # Day-based features
+    df["day_of_week"] = df["date"].apply(lambda d: d.weekday())
     df["is_weekend"] = df["day_of_week"].isin([5, 6]).astype(int)
 
-    # 3. is_holiday from config
+    # Holiday feature
     holiday_path = os.path.join("config", "holidays.json")
     if os.path.exists(holiday_path):
         with open(holiday_path, "r") as f:
@@ -35,9 +40,9 @@ def generate_future_dataframe_for_tomorrow(api_key, location="Mansourieh,LB"):
     else:
         df["is_holiday"] = 0
 
-    # 4. semester_type from semester_dates.json
+    # Semester type
     semester_path = os.path.join("config", "semester_dates.json")
-    df["semester_type"] = "Break"  # default to break if not in any semester
+    df["semester_type"] = "Break"
 
     if os.path.exists(semester_path):
         with open(semester_path, "r") as f:
@@ -56,25 +61,18 @@ def generate_future_dataframe_for_tomorrow(api_key, location="Mansourieh,LB"):
                     df.at[i, "semester_type"] = sem_type
                     break
 
-    print("📅 Semester types in df:", df["semester_type"].unique())
-    print("🧾 DataFrame columns at this point:", df.columns.tolist())
-
-
-    # 5. is_closed_day
     df["is_closed_day"] = (
         (df["day_of_week"] == 6) |
         (df["is_holiday"] == 1) |
         (df["semester_type"].str.lower() == "break")
     ).astype(int)
 
-    # 6. event_nearby
     df["event_nearby"] = 0
 
-    # 7. Fetch and merge weather forecast
-    weather_df = get_hourly_forecast_for_tomorrow(api_key, location)
-    df = df.merge(weather_df, on="hour", how="left")
+    # Fetch and merge weather
+    weather_df = get_hourly_forecast_for_next_36_hours(api_key, location)
+    df = df.merge(weather_df, on=["date", "hour"], how="left")
 
-    # Reorder columns for consistency
     expected_columns = [
         "date", "hour", "day_of_week", "is_weekend", "is_holiday",
         "is_closed_day", "semester_type", "event_nearby",
@@ -85,16 +83,12 @@ def generate_future_dataframe_for_tomorrow(api_key, location="Mansourieh,LB"):
     return df
 
 
-def get_hourly_forecast_for_tomorrow(api_key, location="Mansourieh,LB"):
-    """
-    Fetch hourly weather forecast for tomorrow from WeatherAPI.
-    Returns a DataFrame for hours 7 to 22.
-    """
+def get_hourly_forecast_for_next_36_hours(api_key, location="Mansourieh,LB"):
     url = "http://api.weatherapi.com/v1/forecast.json"
     params = {
         "key": api_key,
         "q": location,
-        "days": 2,
+        "days": 2,  # today + tomorrow
         "aqi": "no",
         "alerts": "no"
     }
@@ -104,45 +98,32 @@ def get_hourly_forecast_for_tomorrow(api_key, location="Mansourieh,LB"):
         raise Exception(f"WeatherAPI error: {response.status_code} - {response.text}")
 
     data = response.json()
-    try:
-        forecast_hours = data["forecast"]["forecastday"][1]["hour"]
-    except (KeyError, IndexError):
-        raise Exception("Could not retrieve hourly forecast for tomorrow.")
-
     rows = []
-    for hour_data in forecast_hours:
-        hour = int(hour_data["time"].split(" ")[1].split(":")[0])
-        if 7 <= hour <= 22:
-            rows.append({
-                "hour": hour,
-                "temperature_C": hour_data["temp_c"],
-                "humidity_percent": hour_data["humidity"],
-                "wind_speed_kmh": hour_data["wind_kph"],
-                "rain_mm": hour_data["precip_mm"]
-            })
+
+    for day_forecast in data["forecast"]["forecastday"]:
+        for hour_data in day_forecast["hour"]:
+            date = pd.to_datetime(hour_data["time"]).date()
+            hour = pd.to_datetime(hour_data["time"]).hour
+            if 7 <= hour <= 22:
+                rows.append({
+                    "date": date,
+                    "hour": hour,
+                    "temperature_C": hour_data["temp_c"],
+                    "humidity_percent": hour_data["humidity"],
+                    "wind_speed_kmh": hour_data["wind_kph"],
+                    "rain_mm": hour_data["precip_mm"]
+                })
 
     return pd.DataFrame(rows)
 
 
-def prepare_model_input_for_tomorrow(api_key, location="Mansourieh,LB"):
-    """
-    Combines feature generation, weather merging, and preprocessing.
-    Returns:
-        X_scaled: model-ready feature matrix
-        df: original rows with metadata for output
-    """
-    df = generate_future_dataframe_for_tomorrow(api_key, location)
+def prepare_model_input_for_next_36_hours(api_key, location="Mansourieh,LB"):
+    df = generate_future_dataframe_for_next_36_hours(api_key, location)
+    df["available_spots"] = 0  # placeholder
 
-    df["available_spots"] = 0
-
-    print("🧪 Before preprocessing:", df.columns.tolist())
-
-    # Feature transformation (same as training)
     df_transformed = add_time_features(df)
     X, _ = prepare_features_and_labels(df_transformed)
 
-
-    # Load and apply saved scaler
     scaler_path = os.path.join("production_model", "scaler.pkl")
     if not os.path.exists(scaler_path):
         raise FileNotFoundError("Scaler not found. Train the model first.")
