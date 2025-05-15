@@ -47,6 +47,7 @@ def main():
         df_existing.drop(columns=['datetime'], inplace=True, errors='ignore')
         df_final = pd.concat([df_existing, df_merged], ignore_index=True)
         df_final.to_csv(TARGET_CSV, index=False)
+        print(f"Latest date in final dataset: {df_final['date'].max()} {df_final['hour'].max()}h")
         print(f"✅ Appended {df_merged.shape[0]} new rows.")
 
     print(df_merged.tail())

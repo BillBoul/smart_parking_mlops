@@ -3,6 +3,10 @@ stages:
   generate_dataset:
     cmd: python data_generation/update_dataset.py
     deps:
+    - path: .always_run_trigger
+      hash: md5
+      md5: 29046b17ff49a3f88119133bc1908837
+      size: 29
     - path: config/holidays.json
       hash: md5
       md5: cc756261b087914f912448c82aedff51
@@ -21,20 +25,15 @@ stages:
       size: 1583
     - path: data_generation/update_dataset.py
       hash: md5
-      md5: 689c8ae31e563177218c701c9a957799
-      size: 2388
-    outs:
-    - path: data/merged_parking_weather_dataset.csv
-      hash: md5
-      md5: a282ce8529446f940f51f4af9fd64eb4
-      size: 1113259
+      md5: 1931c004bebf3d738fe23e4ef2eb564b
+      size: 2488
   train_model:
     cmd: python train_and_log.py --csv_path data/merged_parking_weather_dataset.csv
     deps:
     - path: data/merged_parking_weather_dataset.csv
       hash: md5
-      md5: a282ce8529446f940f51f4af9fd64eb4
-      size: 1113259
+      md5: 7bc393112d71969edd6c97719e777c95
+      size: 1114677
     - path: data_loader.py
       hash: md5
       md5: 57536ec260c9c022f84348a67175f3d7
@@ -54,6 +53,6 @@ stages:
     outs:
     - path: output/
       hash: md5
-      md5: 9d6a7f0e2d3702bf7f94bb47f2bcb37c.dir
-      size: 69509
+      md5: 1e0fdc33393ff9c1cd4b76af8148b1b3.dir
+      size: 69753
       nfiles: 2
