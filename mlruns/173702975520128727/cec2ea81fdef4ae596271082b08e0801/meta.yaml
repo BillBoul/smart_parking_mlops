@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/user/Desktop/smart_parking_mlops/mlruns/173702975520128727/cec2ea81fdef4ae596271082b08e0801/artifacts
+end_time: 1747165807488
+entry_point_name: ''
+experiment_id: '173702975520128727'
+lifecycle_stage: active
+run_id: cec2ea81fdef4ae596271082b08e0801
+run_name: Run_100ep_32bs
+run_uuid: cec2ea81fdef4ae596271082b08e0801
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1747165768420
+status: 3
+tags: []
+user_id: user
