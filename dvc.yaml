@@ -7,6 +7,8 @@ stages:
       - data_generation/generate_weather_data.py
       - config/semester_dates.json
       - config/holidays.json
+    outs:
+      - data/merged_parking_weather_dataset.csv
 
   train_model:
     cmd: python train_and_log.py --csv_path data/merged_parking_weather_dataset.csv
