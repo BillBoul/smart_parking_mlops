@@ -2,7 +2,7 @@ stages:
   generate_dataset:
     cmd: python data_generation/update_dataset.py
     deps:
-      - .always_run_trigger              # 👈 Add this dummy file
+      - .always_run_trigger            
       - data_generation/update_dataset.py
       - data_generation/generate_parking_data.py
       - data_generation/generate_weather_data.py

@@ -83,8 +83,8 @@ def main(args):
         # ==== Plot and log prediction results ====
         os.makedirs("output", exist_ok=True)
         plt.figure(figsize=(12, 6))
-        plt.plot(range(100), y_test[:100], label='True Available Spots', marker='o')
-        plt.plot(range(100), y_pred_rounded[:100], label='Predicted Available Spots', marker='x')
+        plt.plot(range(500), y_test[200:700], label='True Available Spots', marker='o')
+        plt.plot(range(500), y_pred_rounded[200:700], label='Predicted Available Spots', marker='x')
         plt.title('Validation Set: True vs Predicted Parking Availability (First 100 Samples)')
         plt.xlabel('Sample Index')
         plt.ylabel('Available Spots')

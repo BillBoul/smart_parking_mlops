@@ -5,7 +5,7 @@ stages:
     deps:
     - path: .always_run_trigger
       hash: md5
-      md5: 081e150be8bd76ff21771ba463386b3b
+      md5: 94c1c36a6e0cffb7597ac7419f307dc4
       size: 29
     - path: config/holidays.json
       hash: md5
